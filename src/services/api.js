@@ -6,9 +6,4 @@ export async function getMessages() {
   return res.json();
 }
 
-// Alla meddelanden
-export async function getMessages() {
-  const res = await fetch(`${BASE_URL}/messages`, { credentials: "include" });
-  return res.json();
-}
 
