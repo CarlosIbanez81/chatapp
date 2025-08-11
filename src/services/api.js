@@ -1,8 +1,8 @@
 const BASE_URL = "https://chatify-api.up.railway.app";
 
-//CSRF
-export async function getCsrfToken() {
-  const res = await fetch(`${BASE_URL}/csrf`, { method: "PATCH", credentials: "include" });
+// Alla meddelanden
+export async function getMessages() {
+  const res = await fetch(`${BASE_URL}/messages`, { credentials: "include" });
   return res.json();
 }
 
@@ -11,3 +11,4 @@ export async function getMessages() {
   const res = await fetch(`${BASE_URL}/messages`, { credentials: "include" });
   return res.json();
 }
+
