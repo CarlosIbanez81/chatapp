@@ -31,5 +31,26 @@ function App() {
     </>
   )
 }
+console.log("This is a test for class properties in React");
+class Human {
+    species = 'human';
+}
+ 
+class Person extends Human {
+    name = 'Max';
+    printMyName = () => {
+      console.log("nested")
+        console.log(this.name);
+    }
+}
+ 
+const person = new Person();
+console.log("Not nested");
+person.printMyName();
+console.log("_______")
+console.log(person.species);
+
 
 export default App
+
+
