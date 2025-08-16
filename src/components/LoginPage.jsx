@@ -6,25 +6,28 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loggedIn, setLoggedIn] = useState(false);
 
-  function handleLogin(e) {
+ function handleLogin(e) {
     e.preventDefault();
 
-    fetch("https://chatify-api.up.railway.app/auth/login", {
+    const csrf = localStorage.getItem("csrfToken") || "";
+
+    fetch("https://chatify-api.up.railway.app/auth/token", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ username: username, password: password })
+      body: JSON.stringify({ username: username, password: password, csrfToken: csrf })
     })
       .then(function(res) {
-        return res.json();
+        return res.json().then((data) => ({ status: res.status, data }));
       })
-      .then(function(data) {
-        alert(data.message);
-
-        // If login successful, switch to Messages
-        if (data.message.toLowerCase().includes("success")) {
+      .then(function({ status, data }) {
+        if (status >= 200 && status < 300 && data.token) {
+          localStorage.setItem("jwtToken", data.token);
+          alert("Login successful");
           setLoggedIn(true);
+        } else {
+          alert(data?.message || "Login failed");
         }
       })
       .catch(function(err) {

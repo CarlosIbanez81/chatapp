@@ -10,6 +10,12 @@ export default function RegisterForm() {
   });
 
   useEffect(function() {
+    const saved = localStorage.getItem("csrfToken");
+    if (saved) {
+      setCsrfToken(saved);
+      return;
+    }
+
     fetch("https://chatify-api.up.railway.app/csrf", { method: "PATCH" })
       .then(function(res) {
         return res.json();
@@ -17,6 +23,8 @@ export default function RegisterForm() {
       .then(function(data) {
         console.log("Fetched CSRF token:", data.csrfToken);
         setCsrfToken(data.csrfToken);
+        // persist so other components can reuse it
+        localStorage.setItem("csrfToken", data.csrfToken);
       })
       .catch(function(err) {
         console.error("CSRF fetch error:", err);
