@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { getMessages, createMessage } from "../services/api";
 import SideNav from "./SideNav";
 import TokenInfo from "./TokenInfo";
+import "./Messages.css";
 
 export default function Messages({ token: propToken }) {
   // State att spara meddelande och nytt meddelande 
@@ -11,8 +12,8 @@ export default function Messages({ token: propToken }) {
   useEffect(() => {
     // hämtar JWT Token och consolloggar
     // use prop token first, fallback to localStorage
-      var token = propToken || localStorage.getItem("jwtToken");
-     console.log("Messages component mounted. token =", token);
+    var token = propToken || localStorage.getItem("jwtToken");
+    console.log("Messages component mounted. token =", token);
 
     // OM ingen token
     if (!token) {
@@ -59,8 +60,6 @@ export default function Messages({ token: propToken }) {
           status = err.status;
         }
 
-      
-
         setMessages([]);
       });
   }, [propToken]);
@@ -73,7 +72,7 @@ export default function Messages({ token: propToken }) {
     }
 
     // token från localStorage och meddelande om ingen token
-     const token = propToken || localStorage.getItem("jwtToken");
+    const token = propToken || localStorage.getItem("jwtToken");
     if (!token) {
       alert("Ingen autentisering. Vänligen logga in.");
       return;
@@ -85,7 +84,6 @@ export default function Messages({ token: propToken }) {
     // Skapa meddelande
     createMessage(newMsg, token)
       .then(function (msg) {
-       
         setMessages(function (prev) {
           var base = Array.isArray(prev) ? prev : [];
           return base.concat(msg);
@@ -103,38 +101,62 @@ export default function Messages({ token: propToken }) {
       });
   }
 
-// Minimal logout: ska ta bort token och ladda om sidan för att visa inloggningssidan
+  // Minimal logout: ska ta bort token och ladda om sidan för att visa inloggningssidan
   function handleLogout() {
     localStorage.removeItem("jwtToken");
     window.location.reload();
   }
 
+  function formatTime(ts) {
+    try {
+      var d = ts ? new Date(ts) : new Date();
+      return d.toLocaleString();
+    } catch (e) {
+      return "";
+    }
+  }
+
   // Rendera meddelanden och input för nytt meddelande
   return (
-       <div>
+    <div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <h2>Messages</h2>
-        
-        <SideNav />
+        <SideNav onLogout={handleLogout} />
       </div>
+
       <TokenInfo />
-      <ul>
-          {messages.map(function (m, i) {
-       
+
+      <ul className="messages">
+        {messages.map(function (m, i) {
           var key = (m && m.id) ? m.id : i;
-          var content = (m && m.content) ? m.content : JSON.stringify(m);
-          return <li key={key}>{content}</li>;
+          var text = (m && (m.content || m.text || m.message)) ? (m.content || m.text || m.message) : JSON.stringify(m);
+          var user = (m && (m.user || m.username || m.from)) ? (m.user || m.username || m.from) : "Unknown";
+          var time = (m && (m.createdAt || m.created_at || m.ts)) ? formatTime(m.createdAt || m.created_at || m.ts) : "";
+          var own = (m && m.fromMe) ? "own" : "";
+
+          return (
+            <li className={"message " + own} key={key}>
+              <div className="meta">
+                <span className="user">{user}</span>
+                <span className="time">{time}</span>
+              </div>
+              <div className="body">{text}</div>
+            </li>
+          );
         })}
       </ul>
-      <input
-        type="text"
-        value={newMsg}
-        placeholder="Type a message"
-        onChange={function (e) {
-          setNewMsg(e.target.value);
-        }}
-      />
-      <button onClick={handleSend}>Send</button>
+
+      <div className="message-input">
+        <input
+          type="text"
+          value={newMsg}
+          placeholder="Type a message"
+          onChange={function (e) {
+            setNewMsg(e.target.value);
+          }}
+        />
+        <button onClick={handleSend} disabled={!newMsg.trim()}>Send</button>
+      </div>
     </div>
   );
 }
