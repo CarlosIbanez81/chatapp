@@ -4,19 +4,17 @@ import Messages from "./Messages";
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [jwtToken, setJwtToken] = useState(null);
+  const [loggedIn, setLoggedIn] = useState(!!localStorage.getItem("jwtToken"));
+  const [jwtToken, setJwtToken] = useState(localStorage.getItem("jwtToken"));
 
- function handleLogin(e) {
+  function handleLogin(e) {
     e.preventDefault();
 
     const csrf = localStorage.getItem("csrfToken") || "";
 
     fetch("https://chatify-api.up.railway.app/auth/token", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username: username, password: password, csrfToken: csrf })
     })
       .then(function(res) {
@@ -26,20 +24,20 @@ export default function LoginPage() {
         if (status >= 200 && status < 300 && data.token) {
           localStorage.setItem("jwtToken", data.token);
           setJwtToken(data.token);
-          alert("Login successful");
+          alert("Lyckad inloggning");
           setLoggedIn(true);
         } else {
-          alert(data?.message || "Login failed");
+          alert(data?.message || "Inloggning misslyckades");
         }
       })
       .catch(function(err) {
         console.log("Login error:", err);
-        alert("Login failed");
+        alert("Inloggning misslyckades");
       });
   }
 
   if (loggedIn) {
-    return <Messages />;
+    return <Messages token={jwtToken} />;
   }
 
   return (

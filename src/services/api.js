@@ -1,66 +1,71 @@
+// Enkel och lättförståelig API-hjälpare för nybörjare
+
 const BASE_URL = "https://chatify-api.up.railway.app";
 
 // Hämta alla meddelanden
 export async function getMessages(token) {
-  const res = await fetch("https://chatify-api.up.railway.app/messages", {
+  // Bygg headers
+  const headers = { "Content-Type": "application/json" };
+  if (token) {
+    headers.Authorization = "Bearer " + token;
+  }
+
+  // Skicka request
+  const res = await fetch(`${BASE_URL}/messages`, {
     method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {})
-    }
+    headers: headers
   });
 
-  let body = null;
-  try { body = await res.json(); } catch (e) { /* no json body */ }
-
-  if (!res.ok) {
-    const err = new Error(body?.message || `Request failed with status ${res.status}`);
-    err.status = res.status;
-    err.body = body;
-    throw err;
+  // Försök läsa JSON-svar, annars null
+  let data = null;
+  try {
+    data = await res.json();
+  } catch (e) {
+    data = null;
   }
 
-  return body;
+  // Om status inte är OK, skapa ett enkelt felmeddelande
+  if (!res.ok) {
+    const msg = (data && data.message) ? data.message : `Request failed with status ${res.status}`;
+    throw new Error(msg);
+  }
+
+  // Returnera det parsade svaret
+  return data;
 }
 
-// Skapa nytt meddelande
+// Skapa ett nytt meddelande
 export async function createMessage(content, token) {
   if (!token) {
-    const err = new Error("No token, access denied");
-    err.status = 401;
-    throw err;
+    throw new Error("No token, access denied");
   }
 
-  // send 'text' as the API appears to expect
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: "Bearer " + token
+  };
+
+  // API verkar förvänta sig fältet 'text'
   const payload = { text: content };
-  console.log("createMessage: sending payload =", payload, "tokenPresent =", !!token);
 
   const res = await fetch(`${BASE_URL}/messages`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`
-    },
+    headers: headers,
     body: JSON.stringify(payload)
   });
 
-  const text = await res.text().catch(() => null);
-  let body = null;
-  try { body = text ? JSON.parse(text) : null; } catch (e) { body = text; }
-
-  console.log("createMessage: response status =", res.status, "body =", body);
+  let data = null;
+  try {
+    data = await res.json();
+  } catch (e) {
+    data = null;
+  }
 
   if (!res.ok) {
-    const serverMsg =
-      body && typeof body === "object" && body.message
-        ? body.message
-        : typeof body === "string" && body
-        ? body
-        : null;
-    const err = new Error(serverMsg || `Request failed with status ${res.status}`);
-    err.status = res.status;
-    err.body = body;
-    throw err;
+    const msg = (data && data.message) ? data.message : `Request failed with status ${res.status}`;
+    throw new Error(msg);
   }
-  return (body && body.latestMessage) ? body.latestMessage : body;
+
+  // Om API returnerar latestMessage, returnera det objektet; annars returnera hela svaret
+  return (data && data.latestMessage) ? data.latestMessage : data;
 }

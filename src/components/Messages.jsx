@@ -43,7 +43,7 @@ export default function Messages({ token: propToken }) {
         }
 
         // Fallback for unknown response shape
-        console.log("Unknown response shape, setting empty messages.");
+        console.log("Okänd svarstruktur, nollställer");
         setMessages([]);
       })
       .catch(function (err) {
@@ -65,7 +65,7 @@ export default function Messages({ token: propToken }) {
 
   // Funktion som ska hantera att skicka ett nytt meddelande
   function handleSend() {
-    // rekommendation att inte göra något ifall tomt
+    // rekommendation att inte göra något ifall tomt eller om bara mellanrum matats in
     if (!newMsg || newMsg.trim() === "") {
       return;
     }
@@ -73,11 +73,11 @@ export default function Messages({ token: propToken }) {
     // token från localStorage och meddelande om ingen token
      const token = propToken || localStorage.getItem("jwtToken");
     if (!token) {
-      alert("Not authenticated. Please log in.");
+      alert("Ingen autentisering. Vänligen logga in.");
       return;
     }
 
-    // debug: confirm token presence and payload
+    // vill bara se i loggen om token och meddelande finns
     console.log("Sending message:", { content: newMsg, tokenPresent: !!token });
 
     // Skapa meddelande
@@ -90,23 +90,31 @@ export default function Messages({ token: propToken }) {
         });
         setNewMsg("");
       })
-      // Hantera fel
+      // Hantera och visa felmeddelande 
       .catch(function (err) {
         console.error("Error sending message:", err);
-        var messageToShow = "Failed to send message";
+        var messageToShow = "Misslyckades med att skicka meddelande";
         if (err && err.message) {
           messageToShow = err.message;
         }
         alert(messageToShow);
       });
   }
+
+// Minimal logout: ska ta bort token och ladda om sidan för att visa inloggningssidan
+  function handleLogout() {
+    localStorage.removeItem("jwtToken");
+    window.location.reload();
+  }
+
   // Rendera meddelanden och input för nytt meddelande
   return (
     <div>
       <h2>Messages</h2>
+      <button onClick={handleLogout} style={{ marginLeft: 8 }}>Logout</button>
+
       <ul>
-        
-        {messages.map(function (m, i) {
+          {messages.map(function (m, i) {
        
           var key = (m && m.id) ? m.id : i;
           var content = (m && m.content) ? m.content : JSON.stringify(m);
