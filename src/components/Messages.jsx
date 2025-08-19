@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { getMessages, createMessage } from "../services/api";
 import SideNav from "./SideNav";
+import TokenInfo from "../utils/jwtdecoder";
 
 export default function Messages({ token: propToken }) {
   // State att spara meddelande och nytt meddelande 
@@ -113,9 +114,10 @@ export default function Messages({ token: propToken }) {
        <div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <h2>Messages</h2>
+        
         <SideNav />
       </div>
-
+      <TokenInfo />
       <ul>
           {messages.map(function (m, i) {
        
