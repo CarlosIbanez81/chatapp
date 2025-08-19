@@ -57,16 +57,26 @@ export default function RegisterForm() {
         csrfToken: csrfToken
       })
     })
-      .then(function(res) {
-        console.log("Full response object:", res);
-        return res.json();
+ .then(function(res) {
+        // read raw text so we can safely parse or fallback
+        return res.text().then((text) => ({ ok: res.ok, status: res.status, text }));
       })
-      .then(function(data) {
-        console.log("Register response:", data);
-        alert(data.message);
+      .then(function({ ok, status, text }) {
+        let data = null;
+        try { data = text ? JSON.parse(text) : null; } catch (e) { data = text; }
+
+        if (ok) {
+          const successMsg = (data && data.message) ? data.message : "Registration successful";
+          alert(successMsg);
+        } else {
+          // show server message if present, otherwise clear fallback
+          const errMsg = (data && data.message) ? data.message : "Register failed";
+          alert(errMsg);
+        }
       })
       .catch(function(err) {
         console.error("Register error:", err);
+        alert("Register failed");
       });
   }
 
