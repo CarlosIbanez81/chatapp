@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { getMessages, createMessage } from "../services/api";
+import SideNav from "./SideNav";
 
 export default function Messages({ token: propToken }) {
   // State att spara meddelande och nytt meddelande 
@@ -109,9 +110,11 @@ export default function Messages({ token: propToken }) {
 
   // Rendera meddelanden och input för nytt meddelande
   return (
-    <div>
-      <h2>Messages</h2>
-      <button onClick={handleLogout} style={{ marginLeft: 8 }}>Logout</button>
+       <div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <h2>Messages</h2>
+        <SideNav />
+      </div>
 
       <ul>
           {messages.map(function (m, i) {
