@@ -8,10 +8,10 @@ export default function TokenInfo() {
     const token = localStorage.getItem("jwtToken") || sessionStorage.getItem("jwtToken");
     if (!token) { setPayload(null); return; }
     try {
-      const decodedJwt = JSON.parse(atob(token.split(".")[1])); // your one-liner
-      setPayload(decodedJwt);
+      const decodedJwt = JSON.parse(atob(token.split(".")[1])); // från lärarens exempel
+      setPayload(decodedJwt); //sparar decodad JWT
     } catch (e) {
-      setPayload({ error: "Invalid token or decode failed" });
+      setPayload({ error: "Ogiltig token" });
     }
   }, []);
 

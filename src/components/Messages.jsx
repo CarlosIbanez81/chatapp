@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { getMessages, createMessage } from "../services/api";
 import SideNav from "./SideNav";
-import TokenInfo from "../utils/jwtdecoder";
+import TokenInfo from "./TokenInfo";
 
 export default function Messages({ token: propToken }) {
   // State att spara meddelande och nytt meddelande 
