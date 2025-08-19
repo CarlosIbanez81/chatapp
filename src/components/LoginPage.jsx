@@ -5,6 +5,7 @@ export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loggedIn, setLoggedIn] = useState(false);
+  const [jwtToken, setJwtToken] = useState(null);
 
  function handleLogin(e) {
     e.preventDefault();
@@ -24,6 +25,7 @@ export default function LoginPage() {
       .then(function({ status, data }) {
         if (status >= 200 && status < 300 && data.token) {
           localStorage.setItem("jwtToken", data.token);
+          setJwtToken(data.token);
           alert("Login successful");
           setLoggedIn(true);
         } else {

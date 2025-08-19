@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { getMessages, createMessage } from "../services/api";
 
-export default function Messages() {
+export default function Messages({ token: propToken }) {
   // State att spara meddelande och nytt meddelande 
   const [messages, setMessages] = useState([]);
   const [newMsg, setNewMsg] = useState("");
 
   useEffect(() => {
     // hämtar JWT Token och consolloggar
-    var token = localStorage.getItem("jwtToken");
-    console.log("Messages component mounted. token =", token);
+    // use prop token first, fallback to localStorage
+      var token = propToken || localStorage.getItem("jwtToken");
+     console.log("Messages component mounted. token =", token);
 
     // OM ingen token
     if (!token) {
@@ -46,7 +47,7 @@ export default function Messages() {
         setMessages([]);
       })
       .catch(function (err) {
-        console.error("Error fetching messages:", err);
+        console.error("Fel med att hämta meddelanden.", err);
 
         // HÅller koll på error.status
         var status = null;
@@ -60,7 +61,7 @@ export default function Messages() {
 
         setMessages([]);
       });
-  }, []);
+  }, [propToken]);
 
   // Funktion som ska hantera att skicka ett nytt meddelande
   function handleSend() {
@@ -70,11 +71,14 @@ export default function Messages() {
     }
 
     // token från localStorage och meddelande om ingen token
-    var token = localStorage.getItem("jwtToken");
+     const token = propToken || localStorage.getItem("jwtToken");
     if (!token) {
       alert("Not authenticated. Please log in.");
       return;
     }
+
+    // debug: confirm token presence and payload
+    console.log("Sending message:", { content: newMsg, tokenPresent: !!token });
 
     // Skapa meddelande
     createMessage(newMsg, token)
