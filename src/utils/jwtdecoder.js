@@ -1,33 +1,4 @@
-import React, { useEffect, useState } from "react";
-import decodeJwt from "./decodeJwt"; 
-
-export default function TokenInfo() {
-  const [payload, setPayload] = useState(null);
-
-  useEffect(() => {
-    const token = localStorage.getItem("jwtToken") || sessionStorage.getItem("jwtToken");
-    if (!token) {
-      setPayload(null);
-      return;
-    }
-
-    const decoded = decodeJwt(token);
-    if (decoded) {
-      setPayload(decoded);
-    } else {
-      setPayload({ error: "Invalid token or decode failed" });
-    }
-  }, []);
-
-  return (
-    <div style={{ fontSize: 12, whiteSpace: "pre-wrap" }}>
-      <strong>Token payload:</strong>
-      <div>{payload ? JSON.stringify(payload, null, 2) : "No token found"}</div>
-    </div>
-  );
-}
-
-// simple, safe JWT payload decoder (no JSX here)
+// pure JS decoder (no JSX, single default export)
 export default function decodeJwt(token) {
   if (!token) return null;
   try {
