@@ -68,6 +68,7 @@ export default function RegisterForm() {
         if (ok) {
           const successMsg = (data && data.message) ? data.message : "Registration successful";
           alert(successMsg);
+          window.location.href = "/login";
         } else {
           // show server message if present, otherwise clear fallback
           const errMsg = (data && data.message) ? data.message : "Register failed";
