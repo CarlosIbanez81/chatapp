@@ -120,7 +120,7 @@ export default function RegisterForm() {
           <br></br>
           <input
             name="avatar"
-            placeholder="Avatar nr. 0-255"
+            placeholder="Avatar nr. 0-70"
             value={form.avatar}
             onChange={handleChange}
           />

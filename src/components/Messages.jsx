@@ -134,7 +134,7 @@ export default function Messages({ token: propToken }) {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <h2>
               Messages from {`${username}`} - {"\u00A0\u00A0\u00A0\u00A0"}
-              {avatar ? <img src={`https://i.pravatar.cc/200?img=${avatar}`}  /> : "No avatar"}
+              {avatar ? <img src={`https://i.pravatar.cc/90?img=${avatar}`}  /> : "No avatar"}
           </h2>
 
        <SideNav onLogout={handleLogout} />
