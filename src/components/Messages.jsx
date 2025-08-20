@@ -3,11 +3,20 @@ import { getMessages, createMessage } from "../services/api";
 import SideNav from "./SideNav";
 import TokenInfo from "./TokenInfo";
 import "./Messages.css";
+import decodeJwt from "../utils/jwtdecoder";
+
+
 
 export default function Messages({ token: propToken }) {
   // State att spara meddelande och nytt meddelande 
   const [messages, setMessages] = useState([]);
   const [newMsg, setNewMsg] = useState("");
+
+  // Enkel inline-avkodning — ingen useEffect eller extra state behövs
+  const t = propToken || localStorage.getItem("jwtToken") || sessionStorage.getItem("jwtToken");
+  const payload = t ? decodeJwt(t) : null;
+  const username = payload ? (payload.username || payload.user || payload.email || String(payload.id || "")) : null;
+  const avatar = payload ? (payload.avatar || payload.avatarUrl || "") : "";
 
   useEffect(() => {
     // hämtar JWT Token och consolloggar
@@ -119,12 +128,13 @@ export default function Messages({ token: propToken }) {
   // Rendera meddelanden och input för nytt meddelande
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <h2>Messages</h2>
-        <SideNav onLogout={handleLogout} />
+      <div style={{ margin: "8px 0" }}>
+        <TokenInfo />
       </div>
-
-      <TokenInfo />
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <h2>Messages from {`"${username}"`} - Avatar: {`"${avatar}"`}</h2>
+       <SideNav onLogout={handleLogout} />
+      </div>
 
       <ul className="messages">
         {messages.map(function (m, i) {
