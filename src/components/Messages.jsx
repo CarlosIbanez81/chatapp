@@ -144,9 +144,9 @@ export default function Messages({ token: propToken }) {
         {messages.map(function (m, i) {
           var key = (m && m.id) ? m.id : i;
           var text = (m && (m.content || m.text || m.message)) ? (m.content || m.text || m.message) : JSON.stringify(m);
-          var user = (m && (m.user || m.username || m.from)) ? (m.user || m.username || m.from) : "Unknown";
+          var user = `${username}`;
           var time = (m && (m.createdAt || m.created_at || m.ts)) ? formatTime(m.createdAt || m.created_at || m.ts) : "";
-          var own = (m && m.fromMe) ? "own" : "";
+          var own = (m && m.fromMe) ;
 
           return (
             <div className={"message " + own} key={key}>
