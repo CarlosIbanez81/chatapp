@@ -5,12 +5,48 @@ import TokenInfo from "./TokenInfo";
 import "./Messages.css";
 import decodeJwt from "../utils/jwtdecoder";
 
-
-
 export default function Messages({ token: propToken }) {
   // State att spara meddelande och nytt meddelande 
   const [messages, setMessages] = useState([]);
   const [newMsg, setNewMsg] = useState("");
+
+  // --- add mock chat state (kept as useState) ---
+  const [fakeChat, setFakeChat] = useState([
+    {
+      id: "f1",
+      text: "Tja tja, hur mår du?",
+      avatar: "https://i.pravatar.cc/100?img=14",
+      username: "Johnny",
+      conversationId: null,
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: "f2",
+      text: "Hallå!! Svara då!!",
+      avatar: "https://i.pravatar.cc/100?img=14",
+      username: "Johnny",
+      conversationId: null,
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: "f3",
+      text: "Sover du eller?! 😴",
+      avatar: "https://i.pravatar.cc/100?img=14",
+      username: "Johnny",
+      conversationId: null,
+      createdAt: new Date().toISOString(),
+    },
+
+    {
+      id: "f4",
+      text: "Du måste vara däckad!!",
+      avatar: "https://i.pravatar.cc/100?img=14",
+      username: "Johnny",
+      conversationId: null,
+      createdAt: new Date().toISOString(),
+    },
+  ]);
+  // --- end mock chat state ---
 
   // Enkel inline-avkodning — ingen useEffect eller extra state behövs
   // explicit token resolution (no `||`)
@@ -182,33 +218,61 @@ export default function Messages({ token: propToken }) {
        <SideNav onLogout={handleLogout} />
       </div>
 
-      <div className="messages">
-        {messages.map(function (m, i) {
-          var key = m.id ? m.id : i;
-          var text = m.text;
-          var user = username;
-          var time = m.createdAt ? formatTime(m.createdAt) : "";
-          var className = "message" + (m.fromMe ? " own" : "");
+      {/* show fake chat on the left, then user's messages on the right */}
+      <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
+        <aside style={{ width: 260, background: "#fafafa", border: "1px solid #eee", padding: 10, borderRadius: 6 }}>
+          <strong style={{ display: "block", marginBottom: 8 }}>Conversations</strong>
+          <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 8 }}>
+            {fakeChat.map(function (c) {
+              return (
+                <li key={c.id} style={{ padding: 0 }}>
+                  {/* same markup/styles as real messages so mock looks identical */}
+                  <div className="message" style={{ maxWidth: "100%", alignSelf: "flex-start", marginRight: 0 }}>
+                    <div className="meta" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                        <img src={c.avatar} alt={c.username} style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover" }} />
+                        <span className="user" style={{ fontWeight: 600 }}>{c.username}</span>
+                      </div>
+                      <span className="time">{formatTime(c.createdAt)}</span>
+                    </div>
+                    <div className="body">{c.text}</div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </aside>
 
-          return (
-            <div className={className} key={key}>
-              <div className="meta">
-                <span className="user">{user}</span>
-                <span className="time">{time}</span>
+        <div style={{ flex: 1 }}>
+          <div className="messages">
+            {messages.map(function (m, i) {
+              var key = m.id ? m.id : i;
+              var text = m.text;
+              var user = username;
+              var time = m.createdAt ? formatTime(m.createdAt) : "";
+              var className = "message" + (m.fromMe ? " own" : "");
 
-                <button
-                  type="button"
-                  className="delete-btn"
-                  onClick={() => handleDelete(m.id)}
-                  disabled={!m.id}
-                >
-                  Delete
-                </button>
-              </div>
-              <div className="body">{text}</div>
-            </div>
-          );
-        })}
+              return (
+                <div className={className} key={key}>
+                  <div className="meta">
+                    <span className="user">{user}</span>
+                    <span className="time">{time}</span>
+
+                    <button
+                      type="button"
+                      className="delete-btn"
+                      onClick={() => handleDelete(m.id)}
+                      disabled={!m.id}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                  <div className="body">{text}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       <div className="message-input">
