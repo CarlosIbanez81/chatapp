@@ -6,7 +6,7 @@ export default function RegisterForm() {
     username: "",
     password: "",
     email: "",
-    avatar: "none"
+    avatar: ""
   });
 
   useEffect(function() {
@@ -44,6 +44,14 @@ export default function RegisterForm() {
 
   function handleSubmit(e) {
     e.preventDefault();
+
+        // Kolla om avatar är en siffra 0-255
+    var avatarCode = Number(form.avatar);
+    if (!Number.isInteger(avatarCode) || avatarCode < 0 || avatarCode > 255) {
+      alert("Avatar måste vara ett heltal mellan 0 och 255.");
+      return;
+    }
+
     fetch("https://chatify-api.up.railway.app/auth/register", {
       method: "POST",
       headers: {
@@ -110,7 +118,16 @@ export default function RegisterForm() {
             onChange={handleChange}
           />
           <br></br>
+          <input
+            name="avatar"
+            placeholder="Avatar nr. 0-255"
+            value={form.avatar}
+            onChange={handleChange}
+          />
+          
+          <br></br>
           <button type="submit">Register</button>
+          
         </form>
       : null}
     </div>
