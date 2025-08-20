@@ -140,7 +140,7 @@ export default function Messages({ token: propToken }) {
        <SideNav onLogout={handleLogout} />
       </div>
 
-      <ul className="messages">
+      <div className="messages">
         {messages.map(function (m, i) {
           var key = (m && m.id) ? m.id : i;
           var text = (m && (m.content || m.text || m.message)) ? (m.content || m.text || m.message) : JSON.stringify(m);
@@ -149,16 +149,16 @@ export default function Messages({ token: propToken }) {
           var own = (m && m.fromMe) ? "own" : "";
 
           return (
-            <li className={"message " + own} key={key}>
+            <div className={"message " + own} key={key}>
               <div className="meta">
                 <span className="user">{user}</span>
                 <span className="time">{time}</span>
               </div>
               <div className="body">{text}</div>
-            </li>
+            </div>
           );
         })}
-      </ul>
+      </div>
 
       <div className="message-input">
         <input

@@ -7,23 +7,27 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  width: 100%; /* ensure container spans full width so right alignment reaches window edge */
+  align-items: flex-end; /* align all messages to the right */
 }
 
 .message {
-  background: #ffffff;
-  border: 1px solid #e6e6e6;
-  padding: 10px 12px;
-  border-radius: 10px;
   max-width: 70%;
-  box-shadow: 0 1px 0 rgba(0,0,0,0.03);
-  word-wrap: break-word;
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  padding: 10px;
+  border-radius: 10px;
+  align-self: flex-end; /* place every message on the right */
+  margin-right: 8px; /* small gap from window edge */
 }
 
-/* Differentiate own messages if message has `fromMe` truthy */
+/* own messages — flytta till höger */
 .message.own {
-  margin-left: auto;
   background: #dcf8c6;
   border-color: #cfeab0;
+  margin-left: auto;      /* push bubble to the right edge */
+  margin-right: 8px;      /* small gap from window edge */
+  max-width: 70%;
 }
 
 /* Meta row: user + time */
