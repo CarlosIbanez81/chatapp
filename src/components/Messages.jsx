@@ -125,6 +125,34 @@ export default function Messages({ token: propToken }) {
     }
   }
 
+  // --- delete helper (re-add) ---
+  async function handleDelete(id) {
+    if (!id) {
+      alert("Message has no id and cannot be deleted.");
+      return;
+    }
+    if (!window.confirm("Delete this message?")) return;
+
+    const token = propToken || localStorage.getItem("jwtToken");
+    if (!token) {
+      alert("Not authenticated");
+      return;
+    }
+
+    try {
+      const res = await fetch(`https://chatify-api.up.railway.app/messages/${encodeURIComponent(id)}`, {
+        method: "DELETE",
+        headers: { Authorization: "Bearer " + token },
+      });
+      if (!res.ok) throw new Error("Delete failed");
+      setMessages((prev) => (Array.isArray(prev) ? prev.filter((m) => String(m.id) !== String(id)) : prev));
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete message");
+    }
+  }
+  // --- end delete helper ---
+  
   // Rendera meddelanden och input för nytt meddelande
   return (
     <div>
@@ -153,6 +181,15 @@ export default function Messages({ token: propToken }) {
               <div className="meta">
                 <span className="user">{user}</span>
                 <span className="time">{time}</span>
+
+                <button
+                  type="button"
+                  className="delete-btn"
+                  onClick={() => handleDelete(m && m.id ? m.id : null)}
+                  disabled={!(m && m.id)}
+                >
+                  Delete
+                </button>
               </div>
               <div className="body">{text}</div>
             </div>
