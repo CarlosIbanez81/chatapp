@@ -13,10 +13,24 @@ export default function Messages({ token: propToken }) {
   const [newMsg, setNewMsg] = useState("");
 
   // Enkel inline-avkodning — ingen useEffect eller extra state behövs
-  const t = propToken || localStorage.getItem("jwtToken") || sessionStorage.getItem("jwtToken");
+  // explicit token resolution (no `||`)
+  let t = propToken;
+  if (!t) {
+    t = localStorage.getItem("jwtToken");
+  }
+  if (!t) {
+    t = sessionStorage.getItem("jwtToken");
+  }
   const payload = t ? decodeJwt(t) : null;
-  const username = payload ? (payload.username || payload.user || payload.email || String(payload.id || "")) : null;
-  const avatar = payload ? (payload.avatar || payload.avatarUrl || "") : "";
+
+  // explicit username extraction (no `||`)
+  let username = null;
+  if (payload) {
+    if (payload.username) username = payload.username;
+    else if (payload.user) username = payload.user;
+  }
+
+  const avatar = payload ? payload.avatar : "";
 
   useEffect(() => {
     // hämtar JWT Token och consolloggar
@@ -170,14 +184,14 @@ export default function Messages({ token: propToken }) {
 
       <div className="messages">
         {messages.map(function (m, i) {
-          var key = (m && m.id) ? m.id : i;
-          var text = (m && (m.content || m.text || m.message)) ? (m.content || m.text || m.message) : JSON.stringify(m);
-          var user = `${username}`;
-          var time = (m && (m.createdAt || m.created_at || m.ts)) ? formatTime(m.createdAt || m.created_at || m.ts) : "";
-          var own = (m && m.fromMe) ;
+          var key = m.id ? m.id : i;
+          var text = m.text;
+          var user = username;
+          var time = m.createdAt ? formatTime(m.createdAt) : "";
+          var className = "message" + (m.fromMe ? " own" : "");
 
           return (
-            <div className={"message " + own} key={key}>
+            <div className={className} key={key}>
               <div className="meta">
                 <span className="user">{user}</span>
                 <span className="time">{time}</span>
@@ -185,8 +199,8 @@ export default function Messages({ token: propToken }) {
                 <button
                   type="button"
                   className="delete-btn"
-                  onClick={() => handleDelete(m && m.id ? m.id : null)}
-                  disabled={!(m && m.id)}
+                  onClick={() => handleDelete(m.id)}
+                  disabled={!m.id}
                 >
                   Delete
                 </button>
