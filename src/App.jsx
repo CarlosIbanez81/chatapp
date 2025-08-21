@@ -9,7 +9,7 @@ export default function App() {
     return <LoginPage />;
   }
 
-  if (page === "register") {
+  if (page === "Register") {
     return <Register />;
   }
 
