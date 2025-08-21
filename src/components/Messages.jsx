@@ -10,23 +10,22 @@ export default function Messages({ token: propToken }) {
   const [messages, setMessages] = useState([]);
   const [newMsg, setNewMsg] = useState("");
 
-  // --- mock chat kept locally ---
+  // mockade chattet
   const [fakeChat, setFakeChat] = useState([
     { id: "f1", text: "Tja tja, hur mår du?", username: "Johnny", avatar: "https://i.pravatar.cc/100?img=14", createdAt: new Date().toISOString() },
     { id: "f2", text: "Hallå!! Svara då!!", username: "Johnny", avatar: "https://i.pravatar.cc/100?img=14", createdAt: new Date().toISOString() },
     { id: "f3", text: "Sover du eller?! 😴", username: "Johnny", avatar: "https://i.pravatar.cc/100?img=14", createdAt: new Date().toISOString() },
   ]);
-  // --- end mock chat ---
 
-  // Enkel inline-avkodning — ingen useEffect eller extra state behövs
-  const t = propToken || localStorage.getItem("jwtToken") || sessionStorage.getItem("jwtToken");
+
+  // enklare token-resolving (ingen nullish coalescing)
+  const t = propToken || localStorage.getItem("jwtToken");
   const payload = t ? decodeJwt(t) : null;
-  const username = payload ? (payload.username || payload.user || payload.email || String(payload.id || "")) : null;
-  const avatar = payload ? (payload.avatar || payload.avatarUrl || "") : "";
+  const username = payload ? payload.user : "Unknown";
+  const avatar = payload ? payload.avatar : "";
 
   useEffect(() => {
-    // hämtar JWT Token och consolloggar
-    // use prop token first, fallback to localStorage
+    // kolla prop token först, fallback till localStorage.
     var token = propToken || localStorage.getItem("jwtToken");
     console.log("Messages component mounted. token =", token);
 
@@ -50,17 +49,9 @@ export default function Messages({ token: propToken }) {
 
         setMessages([]);
       })
-      .catch(function (err) {
+      // Om inte
+          .catch(function (err) {
         console.error("Fel med att hämta meddelanden.", err);
-
-        // HÅller koll på error.status
-        var status = null;
-        if (err && err.response && err.response.status) {
-          status = err.response.status;
-        } else if (err && err.status) {
-          status = err.status;
-        }
-
         setMessages([]);
       });
   }, [propToken]);
@@ -80,7 +71,7 @@ export default function Messages({ token: propToken }) {
     }
 
     // vill bara se i loggen om token och meddelande finns
-    console.log("Sending message:", { content: newMsg, tokenPresent: !!token });
+    console.log("Skickar meddelande:", { content: newMsg, tokenPresent: !!token });
 
     // Skapa meddelande
     createMessage(newMsg, token)
@@ -102,10 +93,12 @@ export default function Messages({ token: propToken }) {
       });
   }
 
-  // Minimal logout: ska ta bort token och ladda om sidan för att visa inloggningssidan
+  // Minimal logout: ska ta bort token och ladda om sidan för att visa inloggningssidan. 
   function handleLogout() {
     localStorage.removeItem("jwtToken");
-    window.location.reload();
+    //window.location.reload();  - funkade också
+    //navigate("/login"); - funkade också
+    window.location.href = "/login";
   }
 
   function formatTime(ts) {
@@ -117,17 +110,18 @@ export default function Messages({ token: propToken }) {
     }
   }
 
-  // --- delete by message id using API endpoint (Railway) ---
+  // radera meddelande genom att använda API-anrop
   async function handleDelete(id) {
     if (!id) {
-      alert("Message has no id and cannot be deleted.");
+      alert("Meddelande kunde inte tas bort.");
       return;
     }
-    if (!window.confirm("Delete this message?")) return;
 
+    if (!window.confirm("Radera detta meddelande?")) return;
     const token = propToken || localStorage.getItem("jwtToken");
+
     if (!token) {
-      alert("No token available. Please login.");
+      alert("Ingen token tillgänglig. Vänligen logga in.");
       return;
     }
 
@@ -145,30 +139,31 @@ export default function Messages({ token: propToken }) {
         throw new Error(text || `Server returned ${res.status}`);
       }
 
-      // remove from UI state
+      // radera meddelande från UI
       setMessages((prev) => {
+        //Anropar React state-settern för att returnera ny state
         if (!Array.isArray(prev)) return prev;
+        //om inte en array , lämna state oförändrad -  undvika fel.
         return prev.filter((m) => !(m && (String(m.id) === String(id))));
+        //returnerar en ny array som innehåller alla nya element 
       });
 
-      // optional success feedback
-      // alert("Message deleted");
+      // en catch rekommenderas alltid, fast jag ser inte riktigt nyttan här
     } catch (err) {
       console.error("Failed to delete message:", err);
-      alert("Failed to delete message. See console for details.");
+      alert("Meddelandet gick inte att radera. Se konsolen.");
     }
   }
-  // --- end delete helper ---
+  
 
-  // --- delete helper for fake chat (local only) ---
+  // --- radera meddelande (lokalt) ---
   function handleDeleteFake(id) {
     if (!id) return;
-    const item = fakeChat.find((m) => m.id === id);
-    const name = item && item.username ? item.username : "Unknown";
-    if (!window.confirm(`Delete ${name}'s message?`)) return;
+    const name = fakeChat.find((m) => m.id === id)?.username ?? "Unknown";
+    if (!window.confirm(`Radera ${name}'s meddelande?`)) return;
     setFakeChat((prev) => (Array.isArray(prev) ? prev.filter((m) => String(m.id) !== String(id)) : prev));
   }
-  // --- end delete helper ---
+  
 
   // Rendera meddelanden och input för nytt meddelande
   return (
@@ -178,18 +173,17 @@ export default function Messages({ token: propToken }) {
       </div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <h2>
-          Messages from {`${username}`} - {"\u00A0\u00A0\u00A0\u00A0"}
-          {avatar ? <img src={`https://i.pravatar.cc/90?img=${avatar}`} /> : "No avatar"}
+          Meddelanden från {`${username}`} (till höger) - {"\u00A0\u00A0\u00A0\u00A0"}
+          {avatar ? <img src={`https://i.pravatar.cc/90?img=${avatar}`} alt="avatar" /> : "No avatar"}
         </h2>
 
         <SideNav onLogout={handleLogout} />
       </div>
 
-      {/* messages left, mock chat on the right */}
+      {/* mockchat till höger*/}
       <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
-        {/* mock messages — same markup/styles as real messages */}
+        {/* mock ska ha samma style som users */}
         <aside style={{ width: 320 }}>
-          <div style={{ marginBottom: 8, fontWeight: 700 }}>Mock conversations</div>
           <div className="messages">
             {fakeChat.map(function (c) {
               return (
@@ -215,26 +209,26 @@ export default function Messages({ token: propToken }) {
           </div>
         </aside>
 
-        {/* real messages */}
+        {/* user meddelanden */}
         <div style={{ flex: 1 }}>
           <div className="messages">
             {messages.map(function (m, i) {
+              // förenklade fallbacks (ingen ??)
               var key = (m && (m.id || m._id)) ? (m.id || m._id) : i;
-              var text = (m && (m.content || m.text || m.message)) ? (m.content || m.text || m.message) : JSON.stringify(m);
+              var text = (m && (m.text || m.content)) ? (m.text || m.content) : "";
 
-              // determine sender name/alias — prefer explicit name fields, then userId as alias,
-              // finally fall back to the logged-in username (from token)
-              var user =
-                (m && typeof m.user === "string" && m.user) ||
-                (m && m.user && (m.user.name || m.user.username)) ||
-                (m && m.username) ||
-                (m && m.from) ||
-                (m && m.userId ? `${username}` : null) ||
-                username ||
-                "Anonymous";
+              // användarnamn (enkelt fallback utan optional chaining)
+              var user = "Anonymous";
+              if (m) {
+                if (typeof m.user === "string") user = m.user;
+                else if (m.user && (m.user.name || m.user.username)) user = m.user.name || m.user.username;
+                else if (m.username) user = m.username;
+                else if (m.from) user = m.from;
+                else user = username || "Anonymous";
+              }
 
-              var time = (m && (m.createdAt || m.created_at || m.ts)) ? formatTime(m.createdAt || m.created_at || m.ts) : "";
-              var own = (m && m.fromMe) ? "own" : "";
+              var time = m && (m.createdAt || m.created_at || m.ts) ? formatTime(m.createdAt || m.created_at || m.ts) : "";
+              var own = m && m.fromMe ? "own" : "";
 
               return (
                 <div className={"message " + own} key={key}>
@@ -242,12 +236,11 @@ export default function Messages({ token: propToken }) {
                     <span className="user">{user}</span>
                     <span className="time">{time}</span>
 
-                    {/* Delete button — calls Railway API and removes by id */}
+                    {/* Delete knapp som tar bort meddelandet lokalt */}
                     <button
                       type="button"
                       className="delete-btn"
                       onClick={function () { handleDelete(m && (m.id || m._id) ? (m.id || m._id) : null); }}
-                      aria-label="Delete message"
                       disabled={!(m && (m.id || m._id))}
                     >
                       Delete
