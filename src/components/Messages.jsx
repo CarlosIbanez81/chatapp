@@ -185,11 +185,39 @@ export default function Messages({ token: propToken }) {
         <SideNav onLogout={handleLogout} />
       </div>
 
-      {/* messages left, mock chat on the right (same styling) */}
+      {/* messages left, mock chat on the right */}
       <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
-      {/* real messages */}
+        {/* mock messages — same markup/styles as real messages */}
+        <aside style={{ width: 320 }}>
+          <div style={{ marginBottom: 8, fontWeight: 700 }}>Mock conversations</div>
+          <div className="messages">
+            {fakeChat.map(function (c) {
+              return (
+                <div className={"message"} key={c.id}>
+                  <div className="meta">
+                    <span className="user">{c.username}</span>
+                    <span className="time">{formatTime(c.createdAt)}</span>
+
+                    {/* local delete for mock */}
+                    <button
+                      type="button"
+                      className="delete-btn"
+                      onClick={function () { handleDeleteFake(c.id); }}
+                      aria-label="Delete fake message"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                  <div className="body">{c.text}</div>
+                </div>
+              );
+            })}
+          </div>
+        </aside>
+
+        {/* real messages */}
         <div style={{ flex: 1 }}>
-    <div className="messages">
+          <div className="messages">
             {messages.map(function (m, i) {
               var key = (m && (m.id || m._id)) ? (m.id || m._id) : i;
               var text = (m && (m.content || m.text || m.message)) ? (m.content || m.text || m.message) : JSON.stringify(m);
@@ -231,34 +259,6 @@ export default function Messages({ token: propToken }) {
             })}
           </div>
         </div>
-
-        {/* mock messages — same markup/styles as real messages */}
-        <aside style={{ width: 320 }}>
-          <div style={{ marginBottom: 8, fontWeight: 700 }}>Mock conversations</div>
-          <div className="messages">
-            {fakeChat.map(function (c) {
-              return (
-                <div className={"message"} key={c.id}>
-                  <div className="meta">
-                    <span className="user">{c.username}</span>
-                    <span className="time">{formatTime(c.createdAt)}</span>
-
-                    {/* local delete for mock */}
-                    <button
-                      type="button"
-                      className="delete-btn"
-                      onClick={function () { handleDeleteFake(c.id); }}
-                      aria-label="Delete fake message"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                  <div className="body">{c.text}</div>
-                </div>
-              );
-            })}
-          </div>
-        </aside>
       </div>
 
       <div className="message-input">
