@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import LoginPage from "./components/LoginPage";
-import Register from "./components/Register"
+import Register from "./components/register";
 
 export default function App() {
   const [page, setPage] = useState("");
@@ -20,4 +20,4 @@ export default function App() {
       <button onClick={() => setPage("register")}>Register</button>
     </div>
   );
-}
+} 
