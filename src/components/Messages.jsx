@@ -73,9 +73,16 @@ export default function Messages({ token: propToken }) {
     // vill bara se i loggen om token och meddelande finns
     console.log("Skickar meddelande:", { content: newMsg, tokenPresent: !!token });
 
-    // Skapa meddelande
-    createMessage(newMsg, token)
-      .then(function (msg) {
+    // Skapa meddelande men först sanera
+    const safeMsg = sanitizeText(newMsg);
+    // kontrollera om meddelandet är tomt efter sanering - rekommenderades
+    if (!safeMsg) {
+      alert("Meddelandet blev tomt efter sanering.");
+      return;
+    }
+    // Skicka meddelande efter sanering
+    createMessage(safeMsg, token)
+          .then(function (msg) {
         setMessages(function (prev) {
           var base = Array.isArray(prev) ? prev : [];
           return base.concat(msg);
@@ -109,6 +116,23 @@ export default function Messages({ token: propToken }) {
       return "";
     }
   }
+
+  // --- saniterar endast innan rendering ---
+  function sanitizeText(s) {
+    if (s === null || s === undefined) return "";
+    var str = String(s);
+    // sanera HTML-delar för att undvika injektion vid rendering
+    str = str.replace(/&/g, "&amp;")
+             .replace(/</g, "&lt;")
+             .replace(/>/g, "&gt;")
+             .replace(/"/g, "&quot;")
+             .replace(/'/g, "&#39;");
+    // ta bort kontrolltecken
+    str = str.replace(/[\u0000-\u001F\u007F]/g, "");
+    // trimma och begränsa längd
+    return str.trim().slice(0, 1000);
+  }
+  // Sanitering ska vara slut
 
   // radera meddelande genom att använda API-anrop
   async function handleDelete(id) {
