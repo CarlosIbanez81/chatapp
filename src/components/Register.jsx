@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
+import { showToast /*, showConfirm */ } from "./feedback";
 
 export default function Register({ onBack }) {
   const [form, setForm] = useState({
@@ -7,6 +8,39 @@ export default function Register({ onBack }) {
     email: "",
     avatar: ""
   });
+  const [submitting, setSubmitting] = useState(false);
+  const fetchControllerRef = useRef(null);
+  const successNavTimeoutRef = useRef(null);
+
+  // Robust navigation to login
+  function goLogin() {
+    // Cancel any pending success redirect timeout
+    if (successNavTimeoutRef.current) {
+      clearTimeout(successNavTimeoutRef.current);
+      successNavTimeoutRef.current = null;
+    }
+    // Abort in-flight registration fetch
+    if (fetchControllerRef.current) {
+      try { fetchControllerRef.current.abort(); } catch {}
+      fetchControllerRef.current = null;
+    }
+    // Ensure form can be used again if user returns later
+    setSubmitting(false);
+    if (typeof onBack === "function") {
+      try { onBack(); return; } catch {}
+    }
+    const target = "/login";
+    // SPA-style attempt
+    window.history.pushState({}, "", target);
+    window.dispatchEvent(new Event("locationchange"));
+    window.dispatchEvent(new PopStateEvent("popstate"));
+    // If the app does not react, hard redirect as fallback
+    setTimeout(() => {
+      if (window.location.pathname !== target) {
+        window.location.assign(target);
+      }
+    }, 60);
+  }
 
   function handleChange(e) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -14,10 +48,15 @@ export default function Register({ onBack }) {
 
   function handleSubmit(e) {
     e.preventDefault();
+    if (submitting) return; // prevent double submission
+    setSubmitting(true);
+    // Prepare abort controller for this request
+    fetchControllerRef.current = new AbortController();
 
     const avatarCode = Number(form.avatar);
     if (!Number.isInteger(avatarCode) || avatarCode < 0 || avatarCode > 70) {
-      alert("Avatar måste vara ett heltal mellan 0 och 70.");
+      showToast("Avatar måste vara ett heltal mellan 0 och 70.", "warning");
+      setSubmitting(false);
       return;
     }
 
@@ -32,20 +71,34 @@ export default function Register({ onBack }) {
         email: form.email,
         avatar: form.avatar,
         csrfToken
-      })
+      }),
+      signal: fetchControllerRef.current.signal
     })
       .then(async (res) => {
         const data = await res.json().catch(() => null);
         if (res.ok) {
-          alert(data?.message || "Registration successful");
-          onBack(); // 👈 instead of window.location.href
+          showToast(data?.message || "Registration successful", "success");
+          // Allow toast to be seen briefly, then navigate
+          successNavTimeoutRef.current = setTimeout(() => {
+            successNavTimeoutRef.current = null;
+            goLogin();
+          }, 900);
         } else {
-          alert(data?.message || "Register failed");
+          showToast(data?.message || "Register failed", "error");
         }
       })
       .catch((err) => {
         console.error("Register error:", err);
-        alert("Register failed");
+        if (err?.name === "AbortError") {
+          // Navigation / user cancelled: suppress error toast
+          return;
+        }
+        showToast("Register failed", "error");
+      })
+      .finally(() => {
+        // Clear controller after completion (unless already aborted via goLogin)
+        fetchControllerRef.current = null;
+        setSubmitting(false);
       });
   }
 
@@ -79,12 +132,13 @@ export default function Register({ onBack }) {
           value={form.avatar}
           onChange={handleChange}
         /><br />
-        <button type="submit">Register</button>
+        <button type="submit" disabled={submitting}>
+          {submitting ? "Registering..." : "Register"}
+        </button>
       </form>
-
       <br />
-      {/* 👇 new Login button */}
-      <button onClick={onBack}>Back to Login</button>
+      {/* Back button uses robust handler */}
+      <button onClick={goLogin}>Back to Login</button>
     </div>
   );
 }

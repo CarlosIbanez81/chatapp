@@ -15,10 +15,10 @@ export default function TokenInfo() {
     }
   }, []);
 
-  return (
+ /* return (
     <div style={{ fontSize: 12, whiteSpace: "pre-wrap" }}>
       <strong>Token payload:</strong>
       <div>{payload ? JSON.stringify(payload, null, 2) : "No token found"}</div>
     </div>
-  );
+  );*/
 }

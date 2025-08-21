@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Messages from "./Messages";
 import Register from "./Register";
+import { showToast /*, showConfirm */ } from "./feedback";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -18,19 +19,21 @@ export default function LoginPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password, csrfToken: csrf }),
     })
-      .then((res) => res.json().then((data) => ({ status: res.status, data })))
-      .then(({ status, data }) => {
+      .then(function (res) {
+        return res.json().then((data) => ({ status: res.status, data }));
+      })
+      .then(function ({ status, data }) {
         if (status >= 200 && status < 300 && data.token) {
           localStorage.setItem("jwtToken", data.token);
           setJwtToken(data.token);
-          alert("Lyckad inloggning");
+          showToast("Lyckad inloggning", "success");
         } else {
-          alert(data?.message || "Inloggning misslyckades");
+          showToast(data?.message || "Inloggning misslyckades", "error");
         }
       })
-      .catch((err) => {
+      .catch(function (err) {
         console.log("Login error:", err);
-        alert("Inloggning misslyckades");
+        showToast("Inloggning misslyckades", "error");
       });
   }
 
@@ -49,13 +52,15 @@ export default function LoginPage() {
           placeholder="Username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-        /><br />
+        />
+        <br />
         <input
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-        /><br />
+        />
+        <br />
         <button type="submit">Login</button>
         <button
           type="button"
