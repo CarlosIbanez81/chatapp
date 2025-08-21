@@ -6,6 +6,9 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [jwtToken, setJwtToken] = useState(localStorage.getItem("jwtToken"));
 
+
+
+
   function handleLogin(e) {
     e.preventDefault();
 

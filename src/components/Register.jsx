@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from "react";
-//data som skickas med registreringen
-export default function RegisterForm() {
-  const [csrfToken, setCsrfToken] = useState("");
+import React, { useState } from "react";
+
+export default function Register() {
   const [form, setForm] = useState({
     username: "",
     password: "",
@@ -9,50 +8,24 @@ export default function RegisterForm() {
     avatar: ""
   });
 
-  // Hämta CSRF-token
-  useEffect(function() {
-    const saved = localStorage.getItem("csrfToken");
-    if (saved) {
-      setCsrfToken(saved);
-      return;
-    }
-    // Hämta CSRF-token från servern
-    fetch("https://chatify-api.up.railway.app/csrf", { method: "PATCH" })
-      .then(function(res) {
-        return res.json();
-      })
-      .then(function(data) {
-        console.log("Fetched CSRF token:", data.csrfToken);
-        setCsrfToken(data.csrfToken);
-        // sparar CSRF-token i localStorage
-        localStorage.setItem("csrfToken", data.csrfToken);
-      })
-      .catch(function(err) {
-        console.error("CSRF fetch error:", err);
-      });
-  }, []);
-    // funktion som hanterar ändringar i formuläret
   function handleChange(e) {
-    let newForm = {
-      username: form.username,
-      password: form.password,
-      email: form.email,
-      avatar: form.avatar
-    };
-    newForm[e.target.name] = e.target.value;
-    setForm(newForm);
+    setForm(function (prev) {
+      return { ...prev, [e.target.name]: e.target.value };
+    });
   }
 
   function handleSubmit(e) {
     e.preventDefault();
 
-        // Kolla om avatar är en siffra 0-70
     var avatarCode = Number(form.avatar);
     if (!Number.isInteger(avatarCode) || avatarCode < 0 || avatarCode > 70) {
       alert("Avatar måste vara ett heltal mellan 0 och 70.");
       return;
     }
-    // Skicka registreringsdata till servern
+
+    // Läs CSRF-token direkt från localStorage (ingen fetch här)
+    const csrfToken = localStorage.getItem("csrfToken") || "";
+
     fetch("https://chatify-api.up.railway.app/auth/register", {
       method: "POST",
       headers: {
@@ -66,72 +39,57 @@ export default function RegisterForm() {
         csrfToken: csrfToken
       })
     })
- .then(function(res) {
-        // läs råtext så vi kan läsa av eller skita i
-        return res.text().then((text) => ({ ok: res.ok, status: res.status, text }));
-      })
-      .then(function({ ok, status, text }) {
-        let data = null;
-        try { data = text ? JSON.parse(text) : null; } catch (e) { data = text; }
-
-        if (ok) {
-          const successMsg = (data && data.message) ? data.message : "Registration successful";
-          alert(successMsg);
+      .then(async function (res) {
+        const data = await res.json().catch(() => null);
+        if (res.ok) {
+          alert(data?.message || "Registration successful");
           window.location.href = "/login";
         } else {
-          // visa servermeddelande om det finns, annars rensa.
-          const errMsg = (data && data.message) ? data.message : "Register failed";
-          alert(errMsg);
+          alert(data?.message || "Register failed");
         }
-      }) 
-      
-      .catch(function(err) {
+      })
+      .catch(function (err) {
         console.error("Register error:", err);
         alert("Register failed");
       });
   }
-  // rendera registreringsformuläret
+
   return (
     <div>
       <h1>Register</h1>
-      {csrfToken === "" ? <p>Loading CSRF token...</p> : null}
-      {csrfToken !== "" ?
-        <form onSubmit={handleSubmit}>
-          <input
-            name="username"
-            placeholder="Username"
-            value={form.username}
-            onChange={handleChange}
-          />
-          <br></br>
-          <input
-            name="password"
-            type="password"
-            placeholder="Password"
-            value={form.password}
-            onChange={handleChange}
-          />
-          <br></br>
-          <input
-            name="email"
-            type="email"
-            placeholder="Email"
-            value={form.email}
-            onChange={handleChange}
-          />
-          <br></br>
-          <input
-            name="avatar"
-            placeholder="Avatar nr. 0-70"
-            value={form.avatar}
-            onChange={handleChange}
-          />
-          
-          <br></br>
-          <button type="submit">Register</button>
-          
-        </form>
-      : null}
+      <form onSubmit={handleSubmit}>
+        <input
+          name="username"
+          placeholder="Username"
+          value={form.username}
+          onChange={handleChange}
+        />
+        <br />
+        <input
+          name="password"
+          type="password"
+          placeholder="Password"
+          value={form.password}
+          onChange={handleChange}
+        />
+        <br />
+        <input
+          name="email"
+          type="email"
+          placeholder="Email"
+          value={form.email}
+          onChange={handleChange}
+        />
+        <br />
+        <input
+          name="avatar"
+          placeholder="Avatar nr. 0-70"
+          value={form.avatar}
+          onChange={handleChange}
+        />
+        <br />
+        <button type="submit">Register</button>
+      </form>
     </div>
   );
 }

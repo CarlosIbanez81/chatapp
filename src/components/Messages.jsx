@@ -103,9 +103,9 @@ export default function Messages({ token: propToken }) {
   // Minimal logout: ska ta bort token och ladda om sidan för att visa inloggningssidan. 
   function handleLogout() {
     localStorage.removeItem("jwtToken");
-    //window.location.reload();  - funkade också
-    //navigate("/login"); - funkade också
-    window.location.href = "/login";
+    //window.location.reload();  - funkade också - laddar om sidan.
+    //navigate("/login"); - funkade också --den rätta...bara routing , ingen omladdning.
+    window.location.href = "/login"; // laddar sidan om , det vill man inte i React
   }
 
   function formatTime(ts) {

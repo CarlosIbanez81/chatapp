@@ -3,6 +3,7 @@ import LoginPage from "./components/LoginPage";
 import Register from "./components/Register";
 
 
+
 export default function App() {
   const [page, setPage] = useState("");
 
@@ -15,6 +16,8 @@ export default function App() {
   }
 
   return (
+    
+    
     <div>
       <h1>Welcome to Chatify</h1>
       <button onClick={() => setPage("login")}>Login</button>
