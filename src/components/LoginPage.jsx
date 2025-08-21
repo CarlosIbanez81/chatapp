@@ -4,7 +4,6 @@ import Messages from "./Messages";
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [loggedIn, setLoggedIn] = useState(!!localStorage.getItem("jwtToken"));
   const [jwtToken, setJwtToken] = useState(localStorage.getItem("jwtToken"));
 
   function handleLogin(e) {
@@ -25,7 +24,6 @@ export default function LoginPage() {
           localStorage.setItem("jwtToken", data.token);
           setJwtToken(data.token);
           alert("Lyckad inloggning");
-          setLoggedIn(true);
         } else {
           alert(data?.message || "Inloggning misslyckades");
         }
@@ -36,7 +34,7 @@ export default function LoginPage() {
       });
   }
 
-  if (loggedIn) {
+  if (jwtToken) {
     return <Messages token={jwtToken} />;
   }
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-
+//data som skickas med registreringen
 export default function RegisterForm() {
   const [csrfToken, setCsrfToken] = useState("");
   const [form, setForm] = useState({
@@ -9,13 +9,14 @@ export default function RegisterForm() {
     avatar: ""
   });
 
+  // Hämta CSRF-token
   useEffect(function() {
     const saved = localStorage.getItem("csrfToken");
     if (saved) {
       setCsrfToken(saved);
       return;
     }
-
+    // Hämta CSRF-token från servern
     fetch("https://chatify-api.up.railway.app/csrf", { method: "PATCH" })
       .then(function(res) {
         return res.json();
@@ -23,14 +24,14 @@ export default function RegisterForm() {
       .then(function(data) {
         console.log("Fetched CSRF token:", data.csrfToken);
         setCsrfToken(data.csrfToken);
-        // persist so other components can reuse it
+        // sparar CSRF-token i localStorage
         localStorage.setItem("csrfToken", data.csrfToken);
       })
       .catch(function(err) {
         console.error("CSRF fetch error:", err);
       });
   }, []);
-
+    // funktion som hanterar ändringar i formuläret
   function handleChange(e) {
     let newForm = {
       username: form.username,
@@ -45,13 +46,13 @@ export default function RegisterForm() {
   function handleSubmit(e) {
     e.preventDefault();
 
-        // Kolla om avatar är en siffra 0-255
+        // Kolla om avatar är en siffra 0-70
     var avatarCode = Number(form.avatar);
-    if (!Number.isInteger(avatarCode) || avatarCode < 0 || avatarCode > 255) {
-      alert("Avatar måste vara ett heltal mellan 0 och 255.");
+    if (!Number.isInteger(avatarCode) || avatarCode < 0 || avatarCode > 70) {
+      alert("Avatar måste vara ett heltal mellan 0 och 70.");
       return;
     }
-
+    // Skicka registreringsdata till servern
     fetch("https://chatify-api.up.railway.app/auth/register", {
       method: "POST",
       headers: {
@@ -66,7 +67,7 @@ export default function RegisterForm() {
       })
     })
  .then(function(res) {
-        // read raw text so we can safely parse or fallback
+        // läs råtext så vi kan läsa av eller skita i
         return res.text().then((text) => ({ ok: res.ok, status: res.status, text }));
       })
       .then(function({ ok, status, text }) {
@@ -78,17 +79,18 @@ export default function RegisterForm() {
           alert(successMsg);
           window.location.href = "/login";
         } else {
-          // show server message if present, otherwise clear fallback
+          // visa servermeddelande om det finns, annars rensa.
           const errMsg = (data && data.message) ? data.message : "Register failed";
           alert(errMsg);
         }
-      })
+      }) 
+      
       .catch(function(err) {
         console.error("Register error:", err);
         alert("Register failed");
       });
   }
-
+  // rendera registreringsformuläret
   return (
     <div>
       <h1>Register</h1>

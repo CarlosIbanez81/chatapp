@@ -217,15 +217,12 @@ export default function Messages({ token: propToken }) {
               var key = (m && (m.id || m._id)) ? (m.id || m._id) : i;
               var text = (m && (m.text || m.content)) ? (m.text || m.content) : "";
 
-              // användarnamn (enkelt fallback utan optional chaining)
-              var user = "Anonymous";
-              if (m) {
-                if (typeof m.user === "string") user = m.user;
-                else if (m.user && (m.user.name || m.user.username)) user = m.user.name || m.user.username;
-                else if (m.username) user = m.username;
-                else if (m.from) user = m.from;
-                else user = username || "Anonymous";
-              }
+              // användarnamn — kortare 
+              var user =
+                typeof m?.user === "string"
+                  ? m.user
+                  // kortare fallback
+                  : m?.user?.name ?? m?.user?.username ?? m?.username ?? m?.from ?? username ?? "Anonymous";
 
               var time = m && (m.createdAt || m.created_at || m.ts) ? formatTime(m.createdAt || m.created_at || m.ts) : "";
               var own = m && m.fromMe ? "own" : "";
@@ -240,8 +237,8 @@ export default function Messages({ token: propToken }) {
                     <button
                       type="button"
                       className="delete-btn"
-                      onClick={function () { handleDelete(m && (m.id || m._id) ? (m.id || m._id) : null); }}
-                      disabled={!(m && (m.id || m._id))}
+                      onClick={() => handleDelete(m.id)}
+                      disabled={!m.id}
                     >
                       Delete
                     </button>
