@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import LoginPage from "./components/LoginPage";
-import Register from "./components/register";
+import Register from "./components/Register";
+
 
 export default function App() {
   const [page, setPage] = useState("");
@@ -9,7 +10,7 @@ export default function App() {
     return <LoginPage />;
   }
 
-  if (page === "Register") {
+  if (page === "register") {
     return <Register />;
   }
 
