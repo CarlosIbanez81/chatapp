@@ -10,63 +10,19 @@ export default function Messages({ token: propToken }) {
   const [messages, setMessages] = useState([]);
   const [newMsg, setNewMsg] = useState("");
 
-  // --- add mock chat state (kept as useState) ---
+  // --- mock chat kept locally ---
   const [fakeChat, setFakeChat] = useState([
-    {
-      id: "f1",
-      text: "Tja tja, hur mår du?",
-      avatar: "https://i.pravatar.cc/100?img=14",
-      username: "Johnny",
-      conversationId: null,
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "f2",
-      text: "Hallå!! Svara då!!",
-      avatar: "https://i.pravatar.cc/100?img=14",
-      username: "Johnny",
-      conversationId: null,
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "f3",
-      text: "Sover du eller?! 😴",
-      avatar: "https://i.pravatar.cc/100?img=14",
-      username: "Johnny",
-      conversationId: null,
-      createdAt: new Date().toISOString(),
-    },
-
-    {
-      id: "f4",
-      text: "Du måste vara däckad!!",
-      avatar: "https://i.pravatar.cc/100?img=14",
-      username: "Johnny",
-      conversationId: null,
-      createdAt: new Date().toISOString(),
-    },
+    { id: "f1", text: "Tja tja, hur mår du?", username: "Johnny", avatar: "https://i.pravatar.cc/100?img=14", createdAt: new Date().toISOString() },
+    { id: "f2", text: "Hallå!! Svara då!!", username: "Johnny", avatar: "https://i.pravatar.cc/100?img=14", createdAt: new Date().toISOString() },
+    { id: "f3", text: "Sover du eller?! 😴", username: "Johnny", avatar: "https://i.pravatar.cc/100?img=14", createdAt: new Date().toISOString() },
   ]);
-  // --- end mock chat state ---
+  // --- end mock chat ---
 
   // Enkel inline-avkodning — ingen useEffect eller extra state behövs
-  // explicit token resolution (no `||`)
-  let t = propToken;
-  if (!t) {
-    t = localStorage.getItem("jwtToken");
-  }
-  if (!t) {
-    t = sessionStorage.getItem("jwtToken");
-  }
+  const t = propToken || localStorage.getItem("jwtToken") || sessionStorage.getItem("jwtToken");
   const payload = t ? decodeJwt(t) : null;
-
-  // explicit username extraction (no `||`)
-  let username = null;
-  if (payload) {
-    if (payload.username) username = payload.username;
-    else if (payload.user) username = payload.user;
-  }
-
-  const avatar = payload ? payload.avatar : "";
+  const username = payload ? (payload.username || payload.user || payload.email || String(payload.id || "")) : null;
+  const avatar = payload ? (payload.avatar || payload.avatarUrl || "") : "";
 
   useEffect(() => {
     // hämtar JWT Token och consolloggar
@@ -92,20 +48,6 @@ export default function Messages({ token: propToken }) {
           return;
         }
 
-        // kollar om data är arrays
-        if (data && Array.isArray(data.messages)) {
-          setMessages(data.messages);
-          return;
-        }
-
-        // Check if data.data is an array
-        if (data && Array.isArray(data.data)) {
-          setMessages(data.data);
-          return;
-        }
-
-        // Fallback for unknown response shape
-        console.log("Okänd svarstruktur, nollställer");
         setMessages([]);
       })
       .catch(function (err) {
@@ -175,7 +117,7 @@ export default function Messages({ token: propToken }) {
     }
   }
 
-  // --- delete helper (re-add) ---
+  // --- delete by message id using API endpoint (Railway) ---
   async function handleDelete(id) {
     if (!id) {
       alert("Message has no id and cannot be deleted.");
@@ -185,24 +127,49 @@ export default function Messages({ token: propToken }) {
 
     const token = propToken || localStorage.getItem("jwtToken");
     if (!token) {
-      alert("Not authenticated");
+      alert("No token available. Please login.");
       return;
     }
 
     try {
       const res = await fetch(`https://chatify-api.up.railway.app/messages/${encodeURIComponent(id)}`, {
         method: "DELETE",
-        headers: { Authorization: "Bearer " + token },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token,
+        },
       });
-      if (!res.ok) throw new Error("Delete failed");
-      setMessages((prev) => (Array.isArray(prev) ? prev.filter((m) => String(m.id) !== String(id)) : prev));
+
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(text || `Server returned ${res.status}`);
+      }
+
+      // remove from UI state
+      setMessages((prev) => {
+        if (!Array.isArray(prev)) return prev;
+        return prev.filter((m) => !(m && (String(m.id) === String(id))));
+      });
+
+      // optional success feedback
+      // alert("Message deleted");
     } catch (err) {
-      console.error(err);
-      alert("Failed to delete message");
+      console.error("Failed to delete message:", err);
+      alert("Failed to delete message. See console for details.");
     }
   }
   // --- end delete helper ---
-  
+
+  // --- delete helper for fake chat (local only) ---
+  function handleDeleteFake(id) {
+    if (!id) return;
+    const item = fakeChat.find((m) => m.id === id);
+    const name = item && item.username ? item.username : "Unknown";
+    if (!window.confirm(`Delete ${name}'s message?`)) return;
+    setFakeChat((prev) => (Array.isArray(prev) ? prev.filter((m) => String(m.id) !== String(id)) : prev));
+  }
+  // --- end delete helper ---
+
   // Rendera meddelanden och input för nytt meddelande
   return (
     <div>
@@ -210,59 +177,50 @@ export default function Messages({ token: propToken }) {
         <TokenInfo />
       </div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <h2>
-              Messages from {`${username}`} - {"\u00A0\u00A0\u00A0\u00A0"}
-              {avatar ? <img src={`https://i.pravatar.cc/90?img=${avatar}`}  /> : "No avatar"}
-          </h2>
+        <h2>
+          Messages from {`${username}`} - {"\u00A0\u00A0\u00A0\u00A0"}
+          {avatar ? <img src={`https://i.pravatar.cc/90?img=${avatar}`} /> : "No avatar"}
+        </h2>
 
-       <SideNav onLogout={handleLogout} />
+        <SideNav onLogout={handleLogout} />
       </div>
 
-      {/* show fake chat on the left, then user's messages on the right */}
+      {/* messages left, mock chat on the right (same styling) */}
       <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
-        <aside style={{ width: 260, background: "#fafafa", border: "1px solid #eee", padding: 10, borderRadius: 6 }}>
-          <strong style={{ display: "block", marginBottom: 8 }}>Conversations</strong>
-          <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 8 }}>
-            {fakeChat.map(function (c) {
-              return (
-                <li key={c.id} style={{ padding: 0 }}>
-                  {/* same markup/styles as real messages so mock looks identical */}
-                  <div className="message" style={{ maxWidth: "100%", alignSelf: "flex-start", marginRight: 0 }}>
-                    <div className="meta" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                        <img src={c.avatar} alt={c.username} style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover" }} />
-                        <span className="user" style={{ fontWeight: 600 }}>{c.username}</span>
-                      </div>
-                      <span className="time">{formatTime(c.createdAt)}</span>
-                    </div>
-                    <div className="body">{c.text}</div>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        </aside>
-
+      {/* real messages */}
         <div style={{ flex: 1 }}>
-          <div className="messages">
+    <div className="messages">
             {messages.map(function (m, i) {
-              var key = m.id ? m.id : i;
-              var text = m.text;
-              var user = username;
-              var time = m.createdAt ? formatTime(m.createdAt) : "";
-              var className = "message" + (m.fromMe ? " own" : "");
+              var key = (m && (m.id || m._id)) ? (m.id || m._id) : i;
+              var text = (m && (m.content || m.text || m.message)) ? (m.content || m.text || m.message) : JSON.stringify(m);
+
+              // determine sender name/alias — prefer explicit name fields, then userId as alias,
+              // finally fall back to the logged-in username (from token)
+              var user =
+                (m && typeof m.user === "string" && m.user) ||
+                (m && m.user && (m.user.name || m.user.username)) ||
+                (m && m.username) ||
+                (m && m.from) ||
+                (m && m.userId ? `${username}` : null) ||
+                username ||
+                "Anonymous";
+
+              var time = (m && (m.createdAt || m.created_at || m.ts)) ? formatTime(m.createdAt || m.created_at || m.ts) : "";
+              var own = (m && m.fromMe) ? "own" : "";
 
               return (
-                <div className={className} key={key}>
+                <div className={"message " + own} key={key}>
                   <div className="meta">
                     <span className="user">{user}</span>
                     <span className="time">{time}</span>
 
+                    {/* Delete button — calls Railway API and removes by id */}
                     <button
                       type="button"
                       className="delete-btn"
-                      onClick={() => handleDelete(m.id)}
-                      disabled={!m.id}
+                      onClick={function () { handleDelete(m && (m.id || m._id) ? (m.id || m._id) : null); }}
+                      aria-label="Delete message"
+                      disabled={!(m && (m.id || m._id))}
                     >
                       Delete
                     </button>
@@ -273,6 +231,34 @@ export default function Messages({ token: propToken }) {
             })}
           </div>
         </div>
+
+        {/* mock messages — same markup/styles as real messages */}
+        <aside style={{ width: 320 }}>
+          <div style={{ marginBottom: 8, fontWeight: 700 }}>Mock conversations</div>
+          <div className="messages">
+            {fakeChat.map(function (c) {
+              return (
+                <div className={"message"} key={c.id}>
+                  <div className="meta">
+                    <span className="user">{c.username}</span>
+                    <span className="time">{formatTime(c.createdAt)}</span>
+
+                    {/* local delete for mock */}
+                    <button
+                      type="button"
+                      className="delete-btn"
+                      onClick={function () { handleDeleteFake(c.id); }}
+                      aria-label="Delete fake message"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                  <div className="body">{c.text}</div>
+                </div>
+              );
+            })}
+          </div>
+        </aside>
       </div>
 
       <div className="message-input">
