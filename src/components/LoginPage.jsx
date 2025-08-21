@@ -1,13 +1,12 @@
 import React, { useState } from "react";
 import Messages from "./Messages";
+import Register from "./Register";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [jwtToken, setJwtToken] = useState(localStorage.getItem("jwtToken"));
-
-
-
+  const [showRegister, setShowRegister] = useState(false); // <-- toggle between login/register
 
   function handleLogin(e) {
     e.preventDefault();
@@ -17,12 +16,10 @@ export default function LoginPage() {
     fetch("https://chatify-api.up.railway.app/auth/token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: username, password: password, csrfToken: csrf })
+      body: JSON.stringify({ username, password, csrfToken: csrf }),
     })
-      .then(function(res) {
-        return res.json().then((data) => ({ status: res.status, data }));
-      })
-      .then(function({ status, data }) {
+      .then((res) => res.json().then((data) => ({ status: res.status, data })))
+      .then(({ status, data }) => {
         if (status >= 200 && status < 300 && data.token) {
           localStorage.setItem("jwtToken", data.token);
           setJwtToken(data.token);
@@ -31,14 +28,16 @@ export default function LoginPage() {
           alert(data?.message || "Inloggning misslyckades");
         }
       })
-      .catch(function(err) {
+      .catch((err) => {
         console.log("Login error:", err);
         alert("Inloggning misslyckades");
       });
   }
 
-  if (jwtToken) {
-    return <Messages token={jwtToken} />;
+  if (jwtToken) return <Messages token={jwtToken} />;
+
+  if (showRegister) {
+    return <Register onBack={() => setShowRegister(false)} />;
   }
 
   return (
@@ -49,15 +48,22 @@ export default function LoginPage() {
           type="text"
           placeholder="Username"
           value={username}
-          onChange={function(e) { setUsername(e.target.value); }}
+          onChange={(e) => setUsername(e.target.value)}
         /><br />
         <input
           type="password"
           placeholder="Password"
           value={password}
-          onChange={function(e) { setPassword(e.target.value); }}
+          onChange={(e) => setPassword(e.target.value)}
         /><br />
         <button type="submit">Login</button>
+        <button
+          type="button"
+          onClick={() => setShowRegister(true)}
+          style={{ marginLeft: 8 }}
+        >
+          Register
+        </button>
       </form>
     </div>
   );

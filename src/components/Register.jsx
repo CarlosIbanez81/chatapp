@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-export default function Register() {
+export default function Register({ onBack }) {
   const [form, setForm] = useState({
     username: "",
     password: "",
@@ -9,46 +9,41 @@ export default function Register() {
   });
 
   function handleChange(e) {
-    setForm(function (prev) {
-      return { ...prev, [e.target.name]: e.target.value };
-    });
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
   function handleSubmit(e) {
     e.preventDefault();
 
-    var avatarCode = Number(form.avatar);
+    const avatarCode = Number(form.avatar);
     if (!Number.isInteger(avatarCode) || avatarCode < 0 || avatarCode > 70) {
       alert("Avatar måste vara ett heltal mellan 0 och 70.");
       return;
     }
 
-    // Läs CSRF-token direkt från localStorage (ingen fetch här)
     const csrfToken = localStorage.getItem("csrfToken") || "";
 
     fetch("https://chatify-api.up.railway.app/auth/register", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         username: form.username,
         password: form.password,
         email: form.email,
         avatar: form.avatar,
-        csrfToken: csrfToken
+        csrfToken
       })
     })
-      .then(async function (res) {
+      .then(async (res) => {
         const data = await res.json().catch(() => null);
         if (res.ok) {
           alert(data?.message || "Registration successful");
-          window.location.href = "/login";
+          onBack(); // 👈 instead of window.location.href
         } else {
           alert(data?.message || "Register failed");
         }
       })
-      .catch(function (err) {
+      .catch((err) => {
         console.error("Register error:", err);
         alert("Register failed");
       });
@@ -63,34 +58,33 @@ export default function Register() {
           placeholder="Username"
           value={form.username}
           onChange={handleChange}
-        />
-        <br />
+        /><br />
         <input
           name="password"
           type="password"
           placeholder="Password"
           value={form.password}
           onChange={handleChange}
-        />
-        <br />
+        /><br />
         <input
           name="email"
           type="email"
           placeholder="Email"
           value={form.email}
           onChange={handleChange}
-        />
-        <br />
+        /><br />
         <input
           name="avatar"
           placeholder="Avatar nr. 0-70"
           value={form.avatar}
           onChange={handleChange}
-        />
-        <br />
+        /><br />
         <button type="submit">Register</button>
       </form>
+
+      <br />
+      {/* 👇 new Login button */}
+      <button onClick={onBack}>Back to Login</button>
     </div>
   );
 }
-
